@@ -34,14 +34,14 @@ export const inventoryService = {
   deleteCategory: (id) => http.delete(`/categories/${id}`),
 
   // products
-  products: (p) => get('/products', p),
-  product: (id) => get(`/products/${id}`),
-  productStock: (id) => get(`/products/${id}/stock`),
-  createProduct: (b) => http.post('/products', b),
-  updateProduct: (id, b) => http.put(`/products/${id}`, b),
-  deleteProduct: (id, hard = false) => http.delete(`/products/${id}`, { params: hard ? { hard: true } : {} }),
-  skuPreview: (category, brand) => get('/products/sku/preview', { category, brand }),
-  skuCheck: (sku, excludeId) => get('/products/sku/check', { sku, excludeId }),
+  products: (p) => get('/inventory/products', p),
+  product: (id) => get(`/inventory/products/${id}`),
+  productStock: (id) => get(`/inventory/products/${id}/stock`),
+  createProduct: (b) => http.post('/inventory/products', b),
+  updateProduct: (id, b) => http.put(`/inventory/products/${id}`, b),
+  deleteProduct: (id, hard = false) => http.delete(`/inventory/products/${id}`, { params: hard ? { hard: true } : {} }),
+  skuPreview: (category, brand) => get('/inventory/products/sku/preview', { category, brand }),
+  skuCheck: (sku, excludeId) => get('/inventory/products/sku/check', { sku, excludeId }),
 
   // warehouses
   warehouses: (p) => get('/warehouses', p),

@@ -72,6 +72,10 @@ batches.patch('/:id', validate(v.batch.update), c.batches.update);
 batches.post('/:id/write-off', validate(v.batch.writeOff), c.batches.writeOff);
 
 router.use('/categories', categories);
+// Admin product API lives at /api/inventory/products so it never clashes with
+// Module 2's public customer catalogue at /api/products. (/api/products is still
+// served here as a fallback for any path Module 2 doesn't handle.)
+router.use('/inventory/products', products);
 router.use('/products', products);
 router.use('/warehouses', warehouses);
 router.use('/inventory', inventory);

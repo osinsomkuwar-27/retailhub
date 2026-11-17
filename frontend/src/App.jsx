@@ -1,6 +1,7 @@
 
 import { Suspense } from "react";
 import {
+  useLocation,
   BrowserRouter,
   Routes,
   Route,
@@ -53,6 +54,14 @@ function StorefrontLayout({ children }) {
 
 // Inventory and Intelligence Dashboard Layout
 function IntelligenceLayout() {
+  // This layout is mounted at both /inventory/* and /intelligence/*.
+  // Child <Routes> paths are relative to that mount point, so strip the matching prefix.
+  const { pathname } = useLocation();
+  const section = pathname.startsWith("/inventory") ? "/inventory" : "/intelligence";
+  const sectionRoutes = ALL_ROUTES.filter(
+    (r) => r.path === section || r.path.startsWith(`${section}/`)
+  );
+
   return (
     <div className="min-h-screen bg-slate-50">
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col bg-slate-950 text-white md:flex">
@@ -130,17 +139,17 @@ function IntelligenceLayout() {
             }
           >
             <Routes>
-              {ALL_ROUTES.map(({ path, element: Page }) => (
+              {sectionRoutes.map(({ path, element: Page }) => (
                 <Route
                   key={path}
-                  path={path.replace(/^\/intelligence/, "") || "/"}
+                  path={path.slice(section.length) || "/"}
                   element={<Page />}
                 />
               ))}
 
               <Route
                 path="*"
-                element={<Navigate to="/intelligence" replace />}
+                element={<Navigate to={section} replace />}
               />
             </Routes>
           </Suspense>

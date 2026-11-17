@@ -68,7 +68,7 @@ describe('Authentication & authorization', () => {
   });
 
   test('catalogue is publicly readable', async () => {
-    const res = await api().get('/api/products');
+    const res = await api().get('/api/inventory/products');
     expect(res.status).toBe(200);
   });
 });
@@ -92,13 +92,13 @@ describe('Categories, products & SKU', () => {
   });
 
   test('validation errors → 400 with field list', async () => {
-    const res = await api().post('/api/products').set('Authorization', admin).send({ name: 'x', pricing: { costPrice: -1 } });
+    const res = await api().post('/api/inventory/products').set('Authorization', admin).send({ name: 'x', pricing: { costPrice: -1 } });
     expect(res.status).toBe(400);
     expect(res.body.errors.map((e) => e.field)).toEqual(expect.arrayContaining(['body.category', 'body.pricing.costPrice']));
   });
 
   test('auto-generated SKU follows CAT-BRD-00001', async () => {
-    const res = await api().post('/api/products').set('Authorization', admin).send({
+    const res = await api().post('/api/inventory/products').set('Authorization', admin).send({
       name: 'Basmati Rice 5kg', brand: 'India Gate', category: ids.groceries, unit: 'pack',
       pricing: { costPrice: 500, sellingPrice: 650, mrp: 700 }, reorderLevel: 20,
       isPerishable: true, shelfLifeDays: 365,
@@ -107,7 +107,7 @@ describe('Categories, products & SKU', () => {
     expect(res.body.data.sku).toBe('GRO-IND-00001');
     ids.rice = res.body.data._id;
 
-    const res2 = await api().post('/api/products').set('Authorization', admin).send({
+    const res2 = await api().post('/api/inventory/products').set('Authorization', admin).send({
       name: 'Basmati Rice 1kg', brand: 'India Gate', category: ids.groceries,
       pricing: { costPrice: 100, sellingPrice: 130 }, isPerishable: true, shelfLifeDays: 365,
     });
@@ -116,36 +116,36 @@ describe('Categories, products & SKU', () => {
 
   test('manual SKU: duplicate → 409, bad format → 400', async () => {
     const body = { name: 'Phone', brand: 'Samsung', category: ids.electronics, pricing: { costPrice: 10000, sellingPrice: 12000 }, reorderLevel: 5 };
-    let res = await api().post('/api/products').set('Authorization', admin).send({ ...body, sku: 'ELE-SAM-00100' });
+    let res = await api().post('/api/inventory/products').set('Authorization', admin).send({ ...body, sku: 'ELE-SAM-00100' });
     expect(res.status).toBe(201);
     ids.phone = res.body.data._id;
-    res = await api().post('/api/products').set('Authorization', admin).send({ ...body, sku: 'ELE-SAM-00100' });
+    res = await api().post('/api/inventory/products').set('Authorization', admin).send({ ...body, sku: 'ELE-SAM-00100' });
     expect(res.status).toBe(409);
-    res = await api().post('/api/products').set('Authorization', admin).send({ ...body, sku: 'bad sku!' });
+    res = await api().post('/api/inventory/products').set('Authorization', admin).send({ ...body, sku: 'bad sku!' });
     expect(res.status).toBe(400);
   });
 
   test('SKU check endpoint', async () => {
-    const res = await api().get('/api/products/sku/check?sku=ELE-SAM-00100').set('Authorization', admin);
+    const res = await api().get('/api/inventory/products/sku/check?sku=ELE-SAM-00100').set('Authorization', admin);
     expect(res.body.data).toMatchObject({ valid: true, available: false });
   });
 
   test('selling price above MRP is rejected', async () => {
-    const res = await api().put(`/api/products/${ids.rice}`).set('Authorization', admin).send({ pricing: { sellingPrice: 900 } });
+    const res = await api().put(`/api/inventory/products/${ids.rice}`).set('Authorization', admin).send({ pricing: { sellingPrice: 900 } });
     expect(res.status).toBe(400);
   });
 
   test('list with text search, filter and pagination', async () => {
-    const res = await api().get('/api/products?search=rice&limit=1').set('Authorization', admin);
+    const res = await api().get('/api/inventory/products?search=rice&limit=1').set('Authorization', admin);
     expect(res.status).toBe(200);
     expect(res.body.data).toHaveLength(1);
     expect(res.body.meta).toMatchObject({ total: 2, totalPages: 2 });
-    const partial = await api().get('/api/products?search=basm').set('Authorization', admin); // regex fallback
+    const partial = await api().get('/api/inventory/products?search=basm').set('Authorization', admin); // regex fallback
     expect(partial.body.meta.total).toBe(2);
   });
 
   test('customers never see cost price', async () => {
-    const res = await api().get(`/api/products/${ids.rice}`);
+    const res = await api().get(`/api/inventory/products/${ids.rice}`);
     expect(res.body.data.pricing.costPrice).toBeUndefined();
   });
 });
@@ -429,11 +429,11 @@ describe('Reads & aggregations', () => {
   });
 
   test('product with stock cannot be deleted; empty product is soft-deleted when it has history', async () => {
-    let res = await api().delete(`/api/products/${ids.rice}`).set('Authorization', admin);
+    let res = await api().delete(`/api/inventory/products/${ids.rice}`).set('Authorization', admin);
     expect(res.status).toBe(409);
     await stockService.stockOut({ productId: ids.phone, warehouseId: ids.mum, quantity: 2, reason: 'clear' });
     await stockService.stockOut({ productId: ids.phone, warehouseId: ids.del, quantity: 4, reason: 'clear' });
-    res = await api().delete(`/api/products/${ids.phone}`).set('Authorization', admin);
+    res = await api().delete(`/api/inventory/products/${ids.phone}`).set('Authorization', admin);
     expect(res.status).toBe(200);
     expect(res.body.data.mode).toBe('soft');
     expect((await Product.findById(ids.phone)).status).toBe('discontinued');
@@ -443,20 +443,20 @@ describe('Reads & aggregations', () => {
 // ---------------------------------------------------------------------------
 describe('Compatibility with Module 3 (Smart Inventory)', () => {
   test('products carry costPrice + lowStockThreshold mirrors that stay in sync', async () => {
-    const res = await api().post('/api/products').set('Authorization', admin).send({
+    const res = await api().post('/api/inventory/products').set('Authorization', admin).send({
       name: 'Sync Test Item', brand: 'Acme', category: ids.electronics, pricing: { costPrice: 120, sellingPrice: 150 }, reorderLevel: 7,
     });
     let p = await Product.findById(res.body.data._id).lean();
     expect(p).toMatchObject({ costPrice: 120, lowStockThreshold: 7 });
-    await api().put(`/api/products/${p._id}`).set('Authorization', admin).send({ pricing: { costPrice: 130 }, reorderLevel: 9 });
+    await api().put(`/api/inventory/products/${p._id}`).set('Authorization', admin).send({ pricing: { costPrice: 130 }, reorderLevel: 9 });
     p = await Product.findById(p._id).lean();
     expect(p).toMatchObject({ costPrice: 130, lowStockThreshold: 9 });
   });
 
   test('customers never see the costPrice mirror', async () => {
-    const list = await api().get('/api/products?search=Sync');
+    const list = await api().get('/api/inventory/products?search=Sync');
     expect(list.body.data[0].costPrice).toBeUndefined();
-    const one = await api().get(`/api/products/${list.body.data[0]._id}`);
+    const one = await api().get(`/api/inventory/products/${list.body.data[0]._id}`);
     expect(one.body.data.costPrice).toBeUndefined();
   });
 
@@ -479,7 +479,7 @@ describe('Compatibility with Module 3 (Smart Inventory)', () => {
   });
 
   test('list meta includes both totalPages and pages', async () => {
-    const res = await api().get('/api/products?limit=1');
+    const res = await api().get('/api/inventory/products?limit=1');
     expect(res.body.meta.pages).toBe(res.body.meta.totalPages);
   });
 });

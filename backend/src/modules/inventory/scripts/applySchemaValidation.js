@@ -136,12 +136,35 @@ const validators = {
 
 async function applySchemaValidation(db = mongoose.connection.db) {
   const existing = new Set((await db.listCollections({}, { nameOnly: true }).toArray()).map((c) => c.name));
+  let skipped = 0;
   for (const [name, validator] of Object.entries(validators)) {
     const opts = { validator, validationLevel: 'strict', validationAction: 'error' };
-    if (existing.has(name)) await db.command({ collMod: name, ...opts });
-    else await db.createCollection(name, opts);
-    if (process.env.NODE_ENV !== 'test') console.log(`[schema] ${existing.has(name) ? 'updated' : 'created'} validator on ${name}`);
+    try {
+      if (existing.has(name)) {
+        await db.command({ collMod: name, ...opts });
+      } else {
+        try {
+          await db.createCollection(name, opts);
+        } catch (e) {
+          // 48 = NamespaceExists: Mongoose auto-created it in the meantime → just add the validator
+          if (e.code !== 48) throw e;
+          await db.command({ collMod: name, ...opts });
+        }
+      }
+      if (process.env.NODE_ENV !== 'test') console.log(`[schema] ${existing.has(name) ? 'updated' : 'created'} validator on ${name}`);
+    } catch (err) {
+      // Atlas users with only "readWrite" may not run collMod / create with a validator.
+      // Don't block seeding; Mongoose validation still protects every write from the app.
+      if (err.code === 8000 || err.code === 13 || /not allowed|not authorized/i.test(err.message)) {
+        console.warn(`[schema] SKIPPED ${name}: the database user lacks permission to set validators (${err.message}).`);
+        console.warn('[schema]   Ask the Atlas project owner to give this user the "dbAdmin" or "Atlas admin" role, then re-run npm run db:setup:inventory.');
+        skipped += 1;
+      } else {
+        throw err;
+      }
+    }
   }
+  return { skipped };
 }
 
 if (require.main === module) {

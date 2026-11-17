@@ -74,7 +74,7 @@ async function seed() {
   const fresh = process.argv.includes('--fresh');
   if (fresh) await wipeModule1();
   else if (await Product.estimatedDocumentCount()) {
-    console.log('[seed] Module 1 already has data. Use "npm run seed -- --fresh" to reset it.');
+    console.log('[seed] Module 1 already has data. Use "npm run seed:inventory -- --fresh" to reset it.');
     return;
   }
 
