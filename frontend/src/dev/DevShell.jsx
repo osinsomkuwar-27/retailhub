@@ -5,12 +5,10 @@
 // =============================================================================
 import { useEffect, useState } from 'react';
 import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import toast from 'react-hot-toast';
 import { Boxes, LogOut, Menu } from 'lucide-react';
 import { inventoryRoutes } from '../routes/inventoryRoutes';
-
-const API = import.meta.env.VITE_API_URL || '/api';
 
 function readUser() {
   try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
@@ -22,12 +20,12 @@ export function DevLogin() {
   const login = async (role) => {
     setBusy(true);
     try {
-      const { data } = await axios.post(`${API}/dev/token`, { role });
+      const { data } = await api.post('/dev/token', { role });
       localStorage.setItem('token', data.data.token);
       localStorage.setItem('user', JSON.stringify(data.data.user));
       navigate('/inventory');
     } catch {
-      toast.error('Dev login failed. Is the backend running with ENABLE_DEV_AUTH=true?');
+      toast.error('Dev sign-in failed: start the backend first (with ENABLE_DEV_AUTH=true).');
     } finally { setBusy(false); }
   };
   return (
