@@ -26,7 +26,7 @@ const validators = {
 };
 
 (async () => {
-  await mongoose.connect(process.env.MONGODB_URI, { dbName: process.env.DB_NAME || 'retailsync_db' });
+  await mongoose.connect(process.env.MONGODB_URI, { dbName: process.env.DB_NAME || 'retailhub_db' });
   const db = mongoose.connection.db;
   for (const [name, model] of Object.entries(M)) {
     try { await model.createCollection(); } catch (e) { if (e.code !== 48) throw e; }

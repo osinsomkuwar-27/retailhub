@@ -14,7 +14,7 @@ const args = new Set(process.argv.slice(2));
 const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 
 (async () => {
-  await mongoose.connect(process.env.MONGODB_URI, { dbName: process.env.DB_NAME || 'retailsync_db' });
+  await mongoose.connect(process.env.MONGODB_URI, { dbName: process.env.DB_NAME || 'retailhub_db' });
   await SalesHistory.init();
   if (args.has('--reset')) {
     await Promise.all([Supplier.deleteMany({}), SupplierOrder.deleteMany({}), ReorderRule.deleteMany({}), SalesHistory.deleteMany({ source: 'DEMO_SEED' })]);
