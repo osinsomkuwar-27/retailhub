@@ -9,6 +9,15 @@ import {
 } from "react-router-dom";
 
 import { intelligenceRoutes } from "./routes/intelligenceRoutes";
+import { inventoryRoutes } from "./routes/inventoryRoutes";
+import { DevLogin } from "./dev/DevShell";
+
+// Sidebar sections. Entries with hidden: true (Add / Edit Product) are routes only.
+const NAV_SECTIONS = [
+  { title: "Inventory", routes: inventoryRoutes.filter((r) => !r.hidden) },
+  { title: "Smart Inventory", routes: intelligenceRoutes },
+];
+const ALL_ROUTES = [...inventoryRoutes, ...intelligenceRoutes];
 
 function AppLayout() {
   return (
@@ -22,14 +31,19 @@ function AppLayout() {
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-          {intelligenceRoutes.map((item) => {
+          {NAV_SECTIONS.map((section) => (
+            <div key={section.title} className="pb-3">
+              <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                {section.title}
+              </p>
+          {section.routes.map((item) => {
             const Icon = item.icon;
 
             return (
               <NavLink
                 key={item.path}
                 to={item.path}
-                end={item.path === "/intelligence"}
+                end={item.path === "/intelligence" || item.path === "/inventory"}
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition ${
                     isActive
@@ -43,9 +57,13 @@ function AppLayout() {
               </NavLink>
             );
           })}
+            </div>
+          ))}
         </nav>
 
         <div className="border-t border-slate-800 p-4 text-xs text-slate-400">
+          {/* TEMPORARY dev sign-in until Person 4's login exists */}
+          <NavLink to="/login" className="hover:text-white">Dev sign-in</NavLink>
         </div>
       </aside>
 
@@ -65,7 +83,7 @@ function AppLayout() {
             }
           >
             <Routes>
-              {intelligenceRoutes.map(({ path, element: Page }) => (
+              {ALL_ROUTES.map(({ path, element: Page }) => (
                 <Route
                   key={path}
                   path={path}
@@ -88,7 +106,10 @@ function AppLayout() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AppLayout />
+      <Routes>
+        <Route path="/login" element={<DevLogin />} />
+        <Route path="*" element={<AppLayout />} />
+      </Routes>
     </BrowserRouter>
   );
 }
