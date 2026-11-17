@@ -1,7 +1,8 @@
 // =============================================================================
 // One-time migration: adds the Module 3 integration fields to data that was
 // created BEFORE they existed. New documents get them automatically.
-//   products:       costPrice ← pricing.costPrice, lowStockThreshold ← reorderLevel
+//   products:       costPrice ← pricing.costPrice, lowStockThreshold ← reorderLevel,
+//                   price ← pricing.sellingPrice (Module 2 storefront)
 //   inventory_logs: quantity ← quantityChange,      reference.type ← map(reference.kind)
 // Safe to re-run. Part of `npm run db:setup`.
 // =============================================================================
@@ -12,7 +13,7 @@ const InventoryLog = require('../models/InventoryLog');
 async function migrateIntegrationFields(db = mongoose.connection.db) {
   // Aggregation-pipeline updates: copy one field into another, server-side
   const p = await db.collection('products').updateMany({}, [
-    { $set: { costPrice: '$pricing.costPrice', lowStockThreshold: '$reorderLevel' } },
+    { $set: { costPrice: '$pricing.costPrice', lowStockThreshold: '$reorderLevel', price: '$pricing.sellingPrice' } },
   ]);
 
   const map = InventoryLog.REFERENCE_TYPE;

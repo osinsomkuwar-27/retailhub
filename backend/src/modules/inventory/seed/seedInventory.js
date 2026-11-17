@@ -19,6 +19,9 @@ const { syncAll } = require('../scripts/syncIndexes');
 const ADMIN = { id: '000000000000000000000a01', role: 'admin' };
 const MANAGER = { id: '000000000000000000000b01', role: 'warehouse_manager', warehouses: [] };
 const DAY = 86400000;
+const { PHOTOS } = require('./productPhotos');
+// Real product photo (Pexels) for each sample product
+const imageFor = (name) => PHOTOS[name];
 const inDays = (n) => new Date(Date.now() + n * DAY);
 
 const CATEGORIES = [
@@ -39,30 +42,30 @@ const WAREHOUSES = [
 
 // [category, name, brand, unit, cost, sell, mrp, reorder, perishable, shelfLifeDays, attributes]
 const PRODUCTS = [
-  ['ELE', 'Galaxy M35 5G Smartphone 128GB', 'Samsung', 'pcs', 14200, 16999, 19999, 15, false, null, { Color: 'Blue', RAM: '6GB' }],
-  ['ELE', 'Redmi Note 14 Smartphone 128GB', 'Xiaomi', 'pcs', 12800, 14999, 17999, 15, false, null, { Color: 'Black', RAM: '8GB' }],
+  ['ELE', 'Galaxy M35 5G Smartphone 128GB', 'Samsung', 'pcs', 12500, 14999, 24499, 15, false, null, { Color: 'Blue', RAM: '6GB' }],
+  ['ELE', 'Redmi Note 14 Smartphone 128GB', 'Xiaomi', 'pcs', 13200, 15999, 21999, 15, false, null, { Color: 'Black', RAM: '8GB' }],
   ['ELE', 'Rockerz 450 Bluetooth Headphones', 'boAt', 'pcs', 900, 1499, 3990, 25, false, null, { Color: 'Red' }],
-  ['ELE', '20000mAh Power Bank', 'Mi', 'pcs', 1100, 1699, 2199, 20, false, null, { Capacity: '20000mAh' }],
-  ['ELE', 'USB-C Fast Charging Cable 1m', 'Portronics', 'pcs', 120, 249, 499, 50, false, null, { Length: '1m' }],
-  ['GRO', 'Basmati Rice Premium 5kg', 'India Gate', 'pack', 520, 699, 799, 40, true, 365, { Weight: '5kg' }],
-  ['GRO', 'Toor Dal 1kg', 'Tata Sampann', 'pack', 140, 189, 210, 60, true, 270, { Weight: '1kg' }],
-  ['GRO', 'Sunflower Oil 1L', 'Fortune', 'l', 125, 155, 175, 50, true, 270, { Volume: '1L' }],
-  ['GRO', 'Whole Wheat Atta 10kg', 'Aashirvaad', 'pack', 390, 489, 540, 30, true, 120, { Weight: '10kg' }],
-  ['GRO', 'Instant Noodles Masala (Pack of 12)', 'Maggi', 'pack', 150, 192, 204, 40, true, 270, { Count: '12' }],
-  ['DAI', 'Toned Milk 1L', 'Amul', 'l', 52, 66, 68, 100, true, 7, { Fat: '3%' }],
-  ['DAI', 'Processed Cheese Slices 200g', 'Amul', 'pack', 105, 135, 145, 30, true, 180, { Weight: '200g' }],
+  ['ELE', '20000mAh Power Bank', 'Mi', 'pcs', 1250, 1799, 2999, 20, false, null, { Capacity: '20000mAh' }],
+  ['ELE', 'USB-C Fast Charging Cable 1m', 'Portronics', 'pcs', 150, 299, 599, 50, false, null, { Length: '1m' }],
+  ['GRO', 'Basmati Rice Premium 5kg', 'India Gate', 'pack', 540, 649, 875, 40, true, 365, { Weight: '5kg' }],
+  ['GRO', 'Toor Dal 1kg', 'Tata Sampann', 'pack', 150, 179, 220, 60, true, 270, { Weight: '1kg' }],
+  ['GRO', 'Sunflower Oil 1L', 'Fortune', 'l', 140, 165, 190, 50, true, 270, { Volume: '1L' }],
+  ['GRO', 'Whole Wheat Atta 10kg', 'Aashirvaad', 'pack', 410, 469, 545, 30, true, 120, { Weight: '10kg' }],
+  ['GRO', 'Instant Noodles Masala (Pack of 12)', 'Maggi', 'pack', 135, 160, 168, 40, true, 270, { Count: '12' }],
+  ['DAI', 'Toned Milk 1L', 'Amul', 'l', 48, 56, 56, 100, true, 7, { Fat: '3%' }],
+  ['DAI', 'Processed Cheese Slices 200g', 'Amul', 'pack', 125, 145, 150, 30, true, 180, { Weight: '200g' }],
   ['DAI', 'Brown Bread 400g', 'Britannia', 'pack', 38, 50, 55, 40, true, 5, { Weight: '400g' }],
   ['DAI', 'Salted Butter 500g', 'Amul', 'pack', 245, 285, 295, 25, true, 180, { Weight: '500g' }],
   ['BEV', 'Premium Tea 1kg', 'Tata Tea', 'pack', 430, 540, 590, 30, true, 540, { Weight: '1kg' }],
-  ['BEV', 'Instant Coffee 200g', 'Nescafe', 'pack', 520, 650, 699, 20, true, 540, { Weight: '200g' }],
-  ['BEV', 'Mixed Fruit Juice 1L', 'Real', 'l', 85, 120, 130, 40, true, 180, { Volume: '1L' }],
-  ['PCR', 'Anti-Dandruff Shampoo 340ml', 'Head & Shoulders', 'ml', 280, 365, 399, 25, false, null, { Volume: '340ml' }],
-  ['PCR', 'Herbal Toothpaste 200g', 'Dabur', 'pack', 85, 115, 125, 50, false, null, { Weight: '200g' }],
-  ['PCR', 'Moisturising Soap (Pack of 4)', 'Dove', 'pack', 190, 245, 260, 30, false, null, { Count: '4' }],
-  ['HOM', 'Non-Stick Fry Pan 24cm', 'Prestige', 'pcs', 650, 899, 1295, 10, false, null, { Diameter: '24cm' }],
-  ['HOM', 'Stainless Steel Water Bottle 1L', 'Milton', 'pcs', 320, 449, 599, 20, false, null, { Volume: '1L' }],
-  ['HOM', 'Dishwash Liquid 750ml', 'Vim', 'ml', 105, 135, 145, 30, false, null, { Volume: '750ml' }],
-  ['HOM', 'Electric Kettle 1.5L', 'Pigeon', 'pcs', 540, 749, 1195, 8, false, null, { Volume: '1.5L' }],
+  ['BEV', 'Instant Coffee 200g', 'Nescafe', 'pack', 560, 649, 745, 20, true, 540, { Weight: '200g' }],
+  ['BEV', 'Mixed Fruit Juice 1L', 'Real', 'l', 95, 115, 135, 40, true, 180, { Volume: '1L' }],
+  ['PCR', 'Anti-Dandruff Shampoo 340ml', 'Head & Shoulders', 'ml', 290, 345, 449, 25, false, null, { Volume: '340ml' }],
+  ['PCR', 'Herbal Toothpaste 200g', 'Dabur', 'pack', 100, 125, 140, 50, false, null, { Weight: '200g' }],
+  ['PCR', 'Moisturising Soap (Pack of 4)', 'Dove', 'pack', 180, 219, 260, 30, false, null, { Count: '4' }],
+  ['HOM', 'Non-Stick Fry Pan 24cm', 'Prestige', 'pcs', 600, 799, 1295, 10, false, null, { Diameter: '24cm' }],
+  ['HOM', 'Stainless Steel Water Bottle 1L', 'Milton', 'pcs', 330, 449, 699, 20, false, null, { Volume: '1L' }],
+  ['HOM', 'Dishwash Liquid 750ml', 'Vim', 'ml', 150, 179, 199, 30, false, null, { Volume: '750ml' }],
+  ['HOM', 'Electric Kettle 1.5L', 'Pigeon', 'pcs', 480, 649, 1495, 8, false, null, { Volume: '1.5L' }],
 ];
 
 async function wipeModule1() {
@@ -104,6 +107,7 @@ async function seed() {
       pricing: { costPrice: cost, sellingPrice: sell, mrp, taxRate: code === 'ELE' ? 18 : 5 },
       reorderLevel: reorder, isPerishable: perishable, shelfLifeDays: shelf || undefined,
       attributes: Object.entries(attrs).map(([key, value]) => ({ key, value })),
+      images: imageFor(name) ? [imageFor(name)] : [],
     }, ADMIN);
     products.push({ ...p, code });
   }
@@ -183,6 +187,9 @@ async function seed() {
   console.log(`[seed] consistency check: ${mismatches.length === 0 ? 'OK — inventory matches batches' : `${mismatches.length} MISMATCH(ES)`}`);
   console.log(`[seed] done: ${await InventoryLog.countDocuments()} inventory logs, ${await StockBatch.countDocuments()} batches`);
 }
+
+module.exports = { PRODUCTS, imageFor };
+if (require.main !== module) return;
 
 (async () => {
   await connectDB();

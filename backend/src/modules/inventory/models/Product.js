@@ -49,12 +49,17 @@ const productSchema = new mongoose.Schema(
     // by the pre('validate') hook below. Never set them directly.
     costPrice: { type: Number, min: 0 },
     lowStockThreshold: { type: Number, min: 0 },
+    // Read by Module 2 (customer storefront): copy of pricing.sellingPrice
+    price: { type: Number, min: 0 },
   },
   { timestamps: true, collection: 'products' },
 );
 
 productSchema.pre('validate', function syncIntegrationFields() {
-  if (this.pricing) this.costPrice = this.pricing.costPrice;
+  if (this.pricing) {
+    this.costPrice = this.pricing.costPrice;
+    this.price = this.pricing.sellingPrice;
+  }
   this.lowStockThreshold = this.reorderLevel;
 });
 
