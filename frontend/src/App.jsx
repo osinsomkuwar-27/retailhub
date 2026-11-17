@@ -1,3 +1,4 @@
+
 import { Suspense } from "react";
 import {
   BrowserRouter,
@@ -9,8 +10,11 @@ import {
 } from "react-router-dom";
 
 import { intelligenceRoutes } from "./routes/intelligenceRoutes";
+import { inventoryRoutes } from "./routes/inventoryRoutes";
+
 import Navbar from "./components/common/Navbar";
 import { CartProvider } from "./context/CartContext";
+
 import ProductList from "./pages/customer/ProductList";
 import ProductDetail from "./pages/customer/ProductDetail";
 import Cart from "./pages/customer/Cart";
@@ -26,55 +30,72 @@ import Login from "./pages/customer/Login";
 import Register from "./pages/customer/Register";
 import Profile from "./pages/customer/Profile";
 
-// Customer Storefront Layout (Person 2)
+// Inventory and Intelligence navigation
+const NAV_SECTIONS = [
+  { title: "Inventory", routes: inventoryRoutes.filter((r) => !r.hidden) },
+  { title: "Smart Inventory", routes: intelligenceRoutes },
+];
+
+const ALL_ROUTES = [...inventoryRoutes, ...intelligenceRoutes];
+
+// Customer Storefront Layout
 function StorefrontLayout({ children }) {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       <Navbar />
       <main className="flex-1">{children}</main>
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
-        RetailSync Advanced DBMS — Person 2 Storefront Module
+        RetailSync Advanced DBMS — Customer Storefront
       </footer>
     </div>
   );
 }
 
-// Person 3 Intelligence Layout (Preserved Exactly)
+// Inventory and Intelligence Dashboard Layout
 function IntelligenceLayout() {
   return (
     <div className="min-h-screen bg-slate-50">
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col bg-slate-950 text-white md:flex">
-        <div className="border-b border-slate-800 p-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold">RetailHub</h1>
-            <p className="mt-1 text-xs text-slate-400">
-              Smart Inventory Intelligence
-            </p>
-          </div>
+        <div className="border-b border-slate-800 p-6">
+          <h1 className="text-xl font-bold">RetailHub</h1>
+          <p className="mt-1 text-xs text-slate-400">
+            Inventory & Smart Inventory Intelligence
+          </p>
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-          {intelligenceRoutes.map((item) => {
-            const Icon = item.icon;
+          {NAV_SECTIONS.map((section) => (
+            <div key={section.title} className="pb-3">
+              <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                {section.title}
+              </p>
 
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end={item.path === "/intelligence"}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition ${
-                    isActive
-                      ? "bg-teal-600 text-white"
-                      : "text-slate-300 hover:bg-slate-800"
-                  }`
-                }
-              >
-                <Icon size={18} />
-                {item.label}
-              </NavLink>
-            );
-          })}
+              {section.routes.map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    end={
+                      item.path === "/intelligence" ||
+                      item.path === "/inventory"
+                    }
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition ${
+                        isActive
+                          ? "bg-teal-600 text-white"
+                          : "text-slate-300 hover:bg-slate-800"
+                      }`
+                    }
+                  >
+                    {Icon && <Icon size={18} />}
+                    {item.label}
+                  </NavLink>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         <div className="border-t border-slate-800 p-4 text-xs text-slate-400">
@@ -104,12 +125,12 @@ function IntelligenceLayout() {
           <Suspense
             fallback={
               <div className="py-20 text-center text-slate-500">
-                Loading intelligence page...
+                Loading dashboard...
               </div>
             }
           >
             <Routes>
-              {intelligenceRoutes.map(({ path, element: Page }) => (
+              {ALL_ROUTES.map(({ path, element: Page }) => (
                 <Route
                   key={path}
                   path={path.replace(/^\/intelligence/, "") || "/"}
@@ -134,7 +155,7 @@ export default function App() {
     <BrowserRouter>
       <CartProvider>
         <Routes>
-          {/* Person 2 Customer Storefront Routes */}
+          {/* Person 2: Customer Storefront */}
           <Route
             path="/"
             element={
@@ -143,120 +164,24 @@ export default function App() {
               </StorefrontLayout>
             }
           />
-          <Route
-            path="/products"
-            element={
-              <StorefrontLayout>
-                <ProductList />
-              </StorefrontLayout>
-            }
-          />
-          <Route
-            path="/products/:id"
-            element={
-              <StorefrontLayout>
-                <ProductDetail />
-              </StorefrontLayout>
-            }
-          />
-          <Route
-            path="/cart"
-            element={
-              <StorefrontLayout>
-                <Cart />
-              </StorefrontLayout>
-            }
-          />
-          <Route
-            path="/checkout"
-            element={
-              <StorefrontLayout>
-                <Checkout />
-              </StorefrontLayout>
-            }
-          />
-          <Route
-            path="/orders"
-            element={
-              <StorefrontLayout>
-                <Orders />
-              </StorefrontLayout>
-            }
-          />
-          <Route
-            path="/orders/:id"
-            element={
-              <StorefrontLayout>
-                <OrderDetail />
-              </StorefrontLayout>
-            }
-          />
-          <Route
-            path="/orders/confirmation/:id"
-            element={
-              <StorefrontLayout>
-                <OrderConfirmation />
-              </StorefrontLayout>
-            }
-          />
-          <Route
-            path="/payments/:orderId"
-            element={
-              <StorefrontLayout>
-                <Payment />
-              </StorefrontLayout>
-            }
-          />
-          <Route
-            path="/payments/result/:orderId"
-            element={
-              <StorefrontLayout>
-                <PaymentResult />
-              </StorefrontLayout>
-            }
-          />
-          <Route
-            path="/payments/history"
-            element={
-              <StorefrontLayout>
-                <PaymentHistory />
-              </StorefrontLayout>
-            }
-          />
-          <Route
-            path="/reviews/my-reviews"
-            element={
-              <StorefrontLayout>
-                <MyReviews />
-              </StorefrontLayout>
-            }
-          />
-          <Route
-            path="/login"
-            element={
-              <StorefrontLayout>
-                <Login />
-              </StorefrontLayout>
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              <StorefrontLayout>
-                <Register />
-              </StorefrontLayout>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <StorefrontLayout>
-                <Profile />
-              </StorefrontLayout>
-            }
-          />
 
-          {/* Person 3 Intelligence Module Routes */}
+          <Route path="/products" element={<StorefrontLayout><ProductList /></StorefrontLayout>} />
+          <Route path="/products/:id" element={<StorefrontLayout><ProductDetail /></StorefrontLayout>} />
+          <Route path="/cart" element={<StorefrontLayout><Cart /></StorefrontLayout>} />
+          <Route path="/checkout" element={<StorefrontLayout><Checkout /></StorefrontLayout>} />
+          <Route path="/orders" element={<StorefrontLayout><Orders /></StorefrontLayout>} />
+          <Route path="/orders/:id" element={<StorefrontLayout><OrderDetail /></StorefrontLayout>} />
+          <Route path="/orders/confirmation/:id" element={<StorefrontLayout><OrderConfirmation /></StorefrontLayout>} />
+          <Route path="/payments/:orderId" element={<StorefrontLayout><Payment /></StorefrontLayout>} />
+          <Route path="/payments/result/:orderId" element={<StorefrontLayout><PaymentResult /></StorefrontLayout>} />
+          <Route path="/payments/history" element={<StorefrontLayout><PaymentHistory /></StorefrontLayout>} />
+          <Route path="/reviews/my-reviews" element={<StorefrontLayout><MyReviews /></StorefrontLayout>} />
+          <Route path="/login" element={<StorefrontLayout><Login /></StorefrontLayout>} />
+          <Route path="/register" element={<StorefrontLayout><Register /></StorefrontLayout>} />
+          <Route path="/profile" element={<StorefrontLayout><Profile /></StorefrontLayout>} />
+
+          {/* Person 1 and Person 3: Dashboard */}
+          <Route path="/inventory/*" element={<IntelligenceLayout />} />
           <Route path="/intelligence/*" element={<IntelligenceLayout />} />
 
           {/* Fallback */}
