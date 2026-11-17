@@ -1,0 +1,87 @@
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+const addressSchema = new mongoose.Schema(
+  {
+    street: { type: String, default: '' },
+    city: { type: String, default: '' },
+    state: { type: String, default: '' },
+    postalCode: { type: String, default: '' },
+    country: { type: String, default: 'India' },
+  },
+  { _id: false }
+);
+
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'Please provide customer name'],
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, 'Please provide customer email'],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email address'],
+    },
+    password: {
+      type: String,
+      required: [true, 'Please provide a password'],
+      minlength: [6, 'Password must be at least 6 characters'],
+      select: false,
+    },
+    role: {
+      type: String,
+      enum: ['CUSTOMER', 'ADMIN', 'WAREHOUSE_MANAGER'],
+      default: 'CUSTOMER',
+    },
+    phone: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    address: {
+      type: addressSchema,
+      default: () => ({}),
+    },
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+userSchema.methods.matchPassword = async function (enteredPassword) {
+  return bcrypt.compare(enteredPassword, this.password);
+};
+
+userSchema.methods.generateAuthToken = function () {
+  const secret = process.env.JWT_SECRET || 'retailsync_jwt_secret_key_2026';
+  return jwt.sign(
+    {
+      id: this._id,
+      role: this.role,
+      email: this.email,
+    },
+    secret,
+    { expiresIn: '7d' }
+  );
+};
+
+const User = mongoose.models.User || mongoose.model('User', userSchema);
+
+module.exports = User;
