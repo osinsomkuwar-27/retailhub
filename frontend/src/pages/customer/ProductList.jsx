@@ -223,15 +223,23 @@ export default function ProductList() {
                   className="group bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-md transition flex flex-col justify-between"
                 >
                   <Link to={`/products/${p._id}`} className="block">
-                    {/* Media */}
-                    <div className="h-44 bg-slate-100 flex items-center justify-center relative overflow-hidden">
-                      <div className="text-slate-300 group-hover:scale-105 transition duration-300">
-                        <PackageOpen className="w-14 h-14" />
-                      </div>
-                      <span className="absolute top-2 left-2 text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded bg-white/90 text-slate-700 shadow-sm">
-                        {p.category}
-                      </span>
-                    </div>
+                   {/* Media */}
+<div className="h-44 bg-slate-100 flex items-center justify-center relative overflow-hidden">
+  {p.images?.[0] && !p.images[0].includes('placeholder') ? (
+    <img
+      src={p.images[0]}
+      alt={p.name}
+      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+    />
+  ) : (
+    <div className="text-slate-300 group-hover:scale-105 transition duration-300">
+      <PackageOpen className="w-14 h-14" />
+    </div>
+  )}
+  <span className="absolute top-2 left-2 text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded bg-white/90 text-slate-700 shadow-sm">
+    {p.category}
+  </span>
+</div>
 
                     {/* Details */}
                     <div className="p-4">
